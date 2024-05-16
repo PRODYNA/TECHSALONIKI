@@ -2,25 +2,26 @@
   <NuxtPwaManifest />
   <div class="workshop">
     <!-- <NuxtWelcome /> -->
-    <div>
-      <input v-model="message" />
-      <button @click="sendNotification" :disabled="message === ''">Send notification</button>
+    <div class="enable-notifications-container">
+      <button @click="enableNotifications" :disabled="!disabledNotifications">Click to enable notifications</button>
     </div>
-    <div class="modal" v-show="showModal">
-      <div class="inner">
-        <button @click="enableNotifications">Click to enable notifications</button>
+    <div class="message-form">
+      <div class="field border">
+        <input type="text" v-model="message" :disabled="disabledNotifications"/>
       </div>
+      <button @click="sendNotification" :disabled="message === ''">Send notification</button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import "beercss";
 import { getPushSubscription, subscribe } from "./helpers";
 export default defineComponent({
   data() {
     return {
       message: "",
-      showModal: true
+      disabledNotifications: true
     }
   },
   methods: {
@@ -43,7 +44,7 @@ export default defineComponent({
       if (!("Notification" in window)) {
         console.log("This browser does not support notifications.");
       } else if (Notification.permission === "granted" || Notification.permission === "denied") {
-        this.showModal = false;
+        this.disabledNotifications = false;
         return;
       } else {
         Notification.requestPermission().then(async () => {
@@ -60,7 +61,7 @@ export default defineComponent({
                   },
                   body: JSON.stringify(subscription)
                 });
-                this.showModal = false;
+                this.disabledNotifications = false;
               } catch (e) {
                 console.log(e)
               }
@@ -71,6 +72,18 @@ export default defineComponent({
         });
       }
     }
+  },
+  mounted () {
+    navigator.serviceWorker.ready
+        .then(getPushSubscription)
+        .then(async ({ subscription }) => {
+          if (subscription) {
+            this.disabledNotifications = false;
+          }
+        })
+        .catch(e => {
+          console.log("not ready", e)
+        });
   }
 })
 </script>
@@ -82,42 +95,22 @@ body {
 
 .workshop {
   position: relative;
+  max-width: 640px;
   min-height: 100vh;
-}
-
-.workshop .modal {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: lightgray;
-  opacity: 0.5;
   display: flex;
-  justify-items: center;
-}
-
-.workshop .modal .inner {
-  display: flex;
-  justify-items: center;
-  width: 640px;
-  height: 480px;
-  background-color: grey;
+  flex-direction: column;
+  align-content: center;
   margin: auto;
 }
 
-.workshop .modal .inner button {
-  margin: auto;
+.workshop .enable-notifications-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 128px;
 }
 
-::backdrop {
-  background-image: linear-gradient(
-    45deg,
-    magenta,
-    rebeccapurple,
-    dodgerblue,
-    green
-  );
-  opacity: 0.75;
+.workshop .message-form {
+  display: flex;
+  flex-direction: column;
 }
 </style>

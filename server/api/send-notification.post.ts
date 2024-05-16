@@ -6,8 +6,12 @@ export default defineEventHandler(async (event) => {
   subscriptions = subscriptions.filter(sub => sub.includes(".json"));
   for (const subscription of subscriptions) {
     const subscriptionData = await useStorage("filesystem").getItem(subscription) as webpush.PushSubscription;
-    
-    await webpush.sendNotification(subscriptionData, body);
+    try {
+      await webpush.sendNotification(subscriptionData, body);
+    } catch (e) {
+      console.log(e);
+      await useStorage("filesystem").removeItem(subscription);
+    }
   }
   return "OK";
 })

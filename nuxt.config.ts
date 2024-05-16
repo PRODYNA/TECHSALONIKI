@@ -13,7 +13,9 @@ export default defineNuxtConfig({
       }
     }
   },
-
+  build: {
+    transpile: ["beercss"]
+  },
   modules: ["@vite-pwa/nuxt"],
   pwa: {
     /* PWA options */
